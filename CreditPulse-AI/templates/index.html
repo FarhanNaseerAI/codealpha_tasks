@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Risk Scoring Dashboard | NextGen Banking AI</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Custom Theme CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Glassmorphism Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <div class="card-header-icon bg-primary text-white">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <span class="nav-brand-title brand-text fw-bold">CreditPulse AI</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill d-none d-md-inline-block">
+                    <i class="fa-solid fa-brain me-1"></i> Production ML Pipeline v2.4
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="container my-5 flex-grow-1">
+
+        <!-- Error Message Alert -->
+        {% if error_message %}
+        <div class="alert alert-danger alert-dismissible fade show border-0 glass-card text-white mb-4" role="alert">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-danger fs-3"></i>
+                <div>
+                    <strong class="d-block">Validation Error</strong>
+                    <span>{{ error_message }}</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endif %}
+
+        <!-- Client JavaScript Alert Container -->
+        <div id="clientAlert" class="alert alert-warning border-0 glass-card text-warning mb-4 d-none"></div>
+
+        <!-- Header Hero Banner -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <h1 class="display-5 fw-bold mb-2">Customer Credit Risk Scoring</h1>
+                <p class="text-secondary lead fs-6">
+                    Enter customer financial indicators below to run real-time machine learning prediction using pre-trained model pipelines and preprocessor scalers.
+                </p>
+            </div>
+            <!-- Quick Demo Auto-Fill Buttons -->
+            <div class="col-lg-4 d-flex flex-column align-items-lg-end justify-content-center mt-3 mt-lg-0">
+                <span class="text-muted small mb-2"><i class="fa-solid fa-bolt me-1 text-warning"></i> Quick Demo Profiles:</span>
+                <div class="btn-group" role="group" aria-label="Demo Fillers">
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="fillDemoProfile('good')">Good</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="fillDemoProfile('standard')">Standard</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="fillDemoProfile('poor')">Poor</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Form -->
+        <form id="creditForm" action="{{ url_for('predict') }}" method="POST" class="needs-validation" novalidate>
+
+            <div class="row g-4">
+                
+                <!-- Section 1: Personal & Financial Profile -->
+                <div class="col-lg-4">
+                    <div class="glass-card h-100 p-4">
+                        <div class="card-header-custom mb-3 px-0 pt-0">
+                            <div class="card-header-icon">
+                                <i class="fa-solid fa-user-gear"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Personal Profile</h5>
+                                <small class="text-muted">Income & Account Metrics</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Customer Age (Years)</label>
+                            <input type="number" class="form-control" name="Age" data-name="Age" placeholder="Enter age (18–80)" min="18" max="120" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Annual Income ($)</label>
+                            <input type="number" step="0.01" class="form-control" name="Annual_Income" data-name="Annual Income" placeholder="$75,000" min="0" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Monthly Inhand Salary ($)</label>
+                            <input type="number" step="0.01" class="form-control" name="Monthly_Inhand_Salary" data-name="Monthly Inhand Salary" placeholder="$5,800" min="0" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Active Bank Accounts</label>
+                            <input type="number" class="form-control" name="Num_Bank_Accounts" data-name="Bank Accounts" placeholder="e.g. 3" min="0" max="50" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Monthly Investment ($)</label>
+                            <input type="number" step="0.01" class="form-control" name="Amount_invested_monthly" data-name="Monthly Investment" placeholder="$600" min="0" required>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label class="form-label">Remaining Monthly Balance ($)</label>
+                            <input type="number" step="0.01" class="form-control" name="Monthly_Balance" data-name="Monthly Balance" placeholder="$1,850" min="-10000" required>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Section 2: Credit & Debt Liabilities -->
+                <div class="col-lg-4">
+                    <div class="glass-card h-100 p-4">
+                        <div class="card-header-custom mb-3 px-0 pt-0">
+                            <div class="card-header-icon text-indigo">
+                                <i class="fa-solid fa-credit-card"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Credit & Liabilities</h5>
+                                <small class="text-muted">Loans, Utilization & Interest</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Active Credit Cards</label>
+                            <input type="number" class="form-control" name="Num_Credit_Cards" data-name="Credit Cards" placeholder="e.g. 4" min="0" max="50" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Average Interest Rate (%)</label>
+                            <input type="number" step="0.01" class="form-control" name="Interest_Rate" data-name="Interest Rate" placeholder="e.g. 12.5%" min="0" max="100" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Number of Active Loans</label>
+                            <input type="number" class="form-control" name="Num_of_Loan" data-name="Active Loans" placeholder="e.g. 2" min="0" max="50" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Total Outstanding Debt ($)</label>
+                            <input type="number" step="0.01" class="form-control" name="Outstanding_Debt" data-name="Outstanding Debt" placeholder="$15,000" min="0" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Credit Utilization Ratio (%)</label>
+                            <input type="number" step="0.01" class="form-control" name="Credit_Utilization_Ratio" data-name="Credit Utilization Ratio" placeholder="e.g. 28.4%" min="0" max="100" required>
+                            <small class="text-secondary d-block mt-1" style="font-size: 0.78rem;">Recommended below 30%</small>
+                        </div>
+
+                        <div class="form-group mb-0">
+                            <label class="form-label">Total Monthly EMI ($)</label>
+                            <input type="number" step="0.01" class="form-control" name="Total_EMI_per_month" data-name="Total EMI per month" placeholder="$450" min="0" required>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Section 3: History & Payment Behavior -->
+                <div class="col-lg-4">
+                    <div class="glass-card h-100 p-4 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="card-header-custom mb-3 px-0 pt-0">
+                                <div class="card-header-icon text-cyan">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">Repayment Behavior</h5>
+                                    <small class="text-muted">Payment Delays & History</small>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Delay from Due Date (Days)</label>
+                                <input type="number" class="form-control" name="Delay_from_due_date" data-name="Delay from due date" placeholder="e.g. 3" min="0" max="365" required>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Number of Delayed Payments</label>
+                                <input type="number" class="form-control" name="Num_of_Delayed_Payment" data-name="Delayed Payments Count" placeholder="e.g. 1" min="0" max="365" required>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Changed Credit Limit</label>
+                                <input type="number" step="0.01" class="form-control" name="Changed_Credit_Limit" data-name="Changed Credit Limit" placeholder="e.g. 10.0" required>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Number of Credit Inquiries</label>
+                                <input type="number" class="form-control" name="Num_Credit_Inquiries" data-name="Credit Inquiries" placeholder="e.g. 2" min="0" max="100" required>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Credit History Age (Months)</label>
+                                <input type="number" class="form-control" name="Credit_History_Age_Months" data-name="Credit History Age" placeholder="e.g. 96" min="0" required>
+                                <small class="text-secondary d-block mt-1" style="font-size: 0.78rem;">Total months since first credit account</small>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Credit Mix Rating</label>
+                                <select class="form-select" name="Credit_Mix" data-name="Credit Mix" required>
+                                    <option value="" disabled selected>Select Credit Mix</option>
+                                    <option value="Good">Good</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="Bad">Bad</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Payment of Minimum Amount</label>
+                                <select class="form-select" name="Payment_of_Min_Amount" data-name="Payment of Minimum Amount" required>
+                                    <option value="" disabled selected>Minimum Payment Status</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                    <option value="NM">Not Mentioned (NM)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label class="form-label">Payment Behaviour</label>
+                                <select class="form-select" name="Payment_Behaviour" data-name="Payment Behaviour" required>
+                                    <option value="" disabled selected>Select Payment Behaviour</option>
+                                    <option value="High_spent_Large_value_payments">High Spent - Large Value Payments</option>
+                                    <option value="High_spent_Medium_value_payments">High Spent - Medium Value Payments</option>
+                                    <option value="High_spent_Small_value_payments">High Spent - Small Value Payments</option>
+                                    <option value="Low_spent_Large_value_payments">Low Spent - Large Value Payments</option>
+                                    <option value="Low_spent_Medium_value_payments">Low Spent - Medium Value Payments</option>
+                                    <option value="Low_spent_Small_value_payments">Low Spent - Small Value Payments</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Submit Button Bar -->
+            <div class="row mt-4">
+                <div class="col-12 text-center">
+                    <button type="submit" id="submitBtn" class="btn-submit-predict btn-lg px-5 py-3">
+                        <i class="fa-solid fa-gauge-high me-2"></i> Predict Credit Score Risk Profile
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+    </main>
+
+    <!-- Loading Spinner Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner-glow mb-4"></div>
+        <h4 class="fw-bold text-white mb-2">Executing ML Pipeline Analysis</h4>
+        <p class="text-secondary small">Encoding features, applying scaler matrix & predicting credit score class...</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 border-top border-secondary-subtle bg-dark text-center text-muted small">
+        <div class="container">
+            <span>&copy; 2026 CreditPulse AI &bull; Production Machine Learning Credit Scoring Solution</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
